@@ -1,7 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var agent = builder.AddProject<Projects.MyAgentApp_Agent>("agent")
-    .WithUrlForEndpoint("https", ep => new() { Url = "/devui", DisplayText = "DevUI" });
+    .WithUrlForEndpoint("https", url => url.Url = "/devui");
 
 var web = builder.AddProject<Projects.MyAgentApp_Web>("web")
     .WithExternalHttpEndpoints()
