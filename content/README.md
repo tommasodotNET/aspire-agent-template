@@ -73,7 +73,7 @@ DevUI lets you:
 - **Inspect registered tools** and their parameters
 - **Trace tool calls** and agent reasoning
 
-Access DevUI by opening the Agent service URL from the Aspire dashboard (it's served at the root of the Agent service in Development mode).
+Access DevUI by navigating to **`/devui`** on the Agent service URL (find the Agent endpoint in the Aspire dashboard, then append `/devui`).
 
 > **Note:** DevUI is only available in the `Development` environment. It is not mapped in production.
 

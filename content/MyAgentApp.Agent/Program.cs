@@ -51,14 +51,24 @@ if (!string.IsNullOrEmpty(endpoint))
     });
 }
 
+// ── OpenAI-compatible API (required by DevUI) ───────────────────────────────
+// These services expose the agent via OpenAI Responses/Conversations protocol,
+// which DevUI uses to communicate with the agent.
+builder.Services.AddOpenAIResponses();
+builder.Services.AddOpenAIConversations();
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+// Map OpenAI-compatible endpoints (required by DevUI)
+app.MapOpenAIResponses();
+app.MapOpenAIConversations();
+
 // ── DevUI (Development only) ────────────────────────────────────────────────
-// In Development mode, DevUI provides a web interface for testing and debugging
-// the agent — inspect tools, trace calls, and chat without the Blazor UI.
-// Access it at the agent service URL (see Aspire dashboard for the address).
+// DevUI provides a web interface for testing and debugging the agent —
+// inspect tools, trace calls, and chat without the Blazor UI.
+// Access it at: {agent-service-url}/devui
 if (app.Environment.IsDevelopment())
 {
     app.MapDevUI();
