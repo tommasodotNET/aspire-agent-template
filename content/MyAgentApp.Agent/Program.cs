@@ -123,20 +123,21 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 
     // Build the handoff workflow — Router is the entry point.
-    // Note: We use AddAIAgent with a factory instead of AddWorkflow because
-    // HandoffsWorkflowBuilder.Build() doesn't set the workflow name, causing
-    // AddWorkflow's name validation to fail. This bypasses that by converting
-    // the workflow directly to an AIAgent with the correct name.
-    builder.AddAIAgent("MyAgent", (sp, key) =>
+    // We register as BOTH Workflow (for DevUI graph visualization) and AIAgent (for chat).
+    // Note: We bypass AddWorkflow because HandoffsWorkflowBuilder.Build() doesn't set
+    // the workflow name, causing AddWorkflow's name validation to fail.
+    builder.Services.AddKeyedSingleton<Workflow>("MyAgent", (sp, key) =>
     {
         var router = sp.GetRequiredKeyedService<AIAgent>("Router");
         var specialist = sp.GetRequiredKeyedService<AIAgent>("Specialist");
-        var workflow = AgentWorkflowBuilder.CreateHandoffBuilderWith(router)
+        return AgentWorkflowBuilder.CreateHandoffBuilderWith(router)
             .WithHandoffs(router, [specialist])
             .WithHandoffs(specialist, [router])
             .Build();
-        return workflow.AsAIAgent(name: key);
     });
+
+    builder.AddAIAgent("MyAgent", (sp, key) =>
+        sp.GetRequiredKeyedService<Workflow>("MyAgent").AsAIAgent(name: key));
 #endif
 }
 
