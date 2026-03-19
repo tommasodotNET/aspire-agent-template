@@ -12,11 +12,32 @@ XmlEncodedProjectName.Web --AG-UI (SSE)--> XmlEncodedProjectName.Agent
                                 |
                                 v
 <!--#if (UseFoundry) -->
+<!--#if (IncludeHandoff) -->
+                            Router Agent (Azure AI Foundry via Aspire)
+                                |
+                                v  handoff
+                            Specialist Agent
+<!--#else -->
                             AI Agent (Azure AI Foundry via Aspire)
+<!--#endif -->
 <!--#elif (UseAzureOpenAI) -->
+<!--#if (IncludeHandoff) -->
+                            Router Agent (Azure OpenAI via Aspire)
+                                |
+                                v  handoff
+                            Specialist Agent
+<!--#else -->
                             AI Agent (Azure OpenAI via Aspire)
+<!--#endif -->
+<!--#else -->
+<!--#if (IncludeHandoff) -->
+                            Router Agent (OpenAI via Aspire)
+                                |
+                                v  handoff
+                            Specialist Agent
 <!--#else -->
                             AI Agent (OpenAI via Aspire)
+<!--#endif -->
 <!--#endif -->
                                 |
                                 v
@@ -30,9 +51,17 @@ XmlEncodedProjectName.Web --AG-UI (SSE)--> XmlEncodedProjectName.Agent
 ```
 
 <!--#if (IncludeMcp) -->
+<!--#if (IncludeHandoff) -->
+**The flow:** User message -> Web UI -> AG-UI stream -> Router Agent -> Handoff -> Specialist Agent -> In-process tools + MCP tools -> Domain Service / MCP Server -> Streaming response
+<!--#else -->
 **The flow:** User message -> Web UI -> AG-UI stream -> AI Agent -> In-process tools + MCP tools -> Domain Service / MCP Server -> Streaming response
+<!--#endif -->
+<!--#else -->
+<!--#if (IncludeHandoff) -->
+**The flow:** User message -> Web UI -> AG-UI stream -> Router Agent -> Handoff -> Specialist Agent -> Tool calls -> Domain Service -> Streaming response
 <!--#else -->
 **The flow:** User message -> Web UI -> AG-UI stream -> AI Agent -> Tool calls -> Domain Service -> Streaming response
+<!--#endif -->
 <!--#endif -->
 
 **Key protocols:**
@@ -177,6 +206,47 @@ This project includes an **MCP server** (`XmlEncodedProjectName.Mcp`) that hosts
 2. The tool is automatically discovered -- no additional registration needed.
 
 **Learn more:** [MCP in .NET](https://learn.microsoft.com/dotnet/ai/quickstarts/build-mcp-server)
+
+<!--#endif -->
+<!--#if (IncludeHandoff) -->
+### Multi-Agent Handoff
+
+This project uses a **multi-agent handoff workflow** where a Router agent classifies user intent and routes to specialist agents:
+
+| Agent | Role |
+|-------|------|
+| **Router** | Entry point — understands user intent and hands off to the right specialist |
+| **Specialist** | Handles todo list management using domain tools |
+
+The handoff workflow is powered by `AgentWorkflowBuilder` from `Microsoft.Agents.AI.Workflows`. The Router and Specialist can hand off to each other seamlessly.
+
+**Add a new specialist agent:**
+
+1. Register a new agent in `Program.cs`:
+   ```csharp
+   builder.AddAIAgent("Analytics", (sp, name) =>
+   {
+       var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
+       var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+       return chatClient.AsAIAgent(
+           name: name,
+           instructions: "You analyze todo completion trends and productivity...",
+           tools: analyticsTools);
+   });
+   ```
+
+2. Add it to the workflow handoff rules:
+   ```csharp
+   return AgentWorkflowBuilder.CreateHandoffBuilderWith(router)
+       .WithHandoffs(router, [specialist, analytics])  // Router can route to both
+       .WithHandoffs(specialist, router)
+       .WithHandoffs(analytics, router)
+       .Build();
+   ```
+
+3. Update the Router's instructions to describe the new specialist.
+
+**Learn more:** [Agent Handoff Workflows](https://learn.microsoft.com/agent-framework/workflows/orchestrations/handoff)
 
 <!--#endif -->
 ## How to Extend

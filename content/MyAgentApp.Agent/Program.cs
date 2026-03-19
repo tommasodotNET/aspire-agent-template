@@ -3,6 +3,9 @@ using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Extensions.AI;
+#if (IncludeHandoff)
+using Microsoft.Agents.AI.Workflows;
+#endif
 using MyAgentApp.Agent;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +54,7 @@ if (!string.IsNullOrEmpty(connectionString))
 
     // Register the agent using the Hosting pattern so DevUI can discover it.
     var deployment = builder.Configuration["OpenAI:Deployment"] ?? "gpt-4o-mini";
+#if (!IncludeHandoff)
     builder.AddAIAgent("MyAgent", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
@@ -71,6 +75,65 @@ if (!string.IsNullOrEmpty(connectionString))
                 """,
             tools: tools);
     });
+#else
+    // ── Multi-Agent Handoff Workflow ─────────────────────────────────────────
+    // Router: classifies user intent and routes to the appropriate specialist.
+    // Specialist: handles domain-specific tasks using tools.
+    // TODO: Add more specialist agents for different domains.
+
+    builder.AddAIAgent("Router", (sp, name) =>
+    {
+        var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
+        var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        return chatClient.AsAIAgent(
+            name: name,
+            instructions: """
+                You are a routing agent. Your job is to understand the user's intent
+                and hand off to the right specialist agent.
+
+                Available specialists:
+                - "Specialist": Handles todo list management (add, list, complete, delete items)
+
+                If the user's request relates to managing tasks or todos, hand off to Specialist.
+                For general conversation or greetings, respond directly.
+
+                TODO: Add more specialists here as you expand the application.
+                """);
+    });
+
+    builder.AddAIAgent("Specialist", (sp, name) =>
+    {
+        var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
+        var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        var todoTools = new TodoTools(sp.GetRequiredService<TodoService>());
+        var tools = new List<AITool>(todoTools.AsAIFunctions());
+#if (IncludeMcp)
+        var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
+        tools.AddRange(mcpToolProvider.Tools);
+#endif
+        return chatClient.AsAIAgent(
+            name: name,
+            instructions: """
+                You are a specialist agent that manages a todo list.
+                Use the available tools to add, list, complete, and delete todo items.
+                Be friendly, concise, and helpful. When listing todos, format them clearly.
+                If the user asks about something outside your expertise, hand off back to Router.
+                """,
+            tools: tools);
+    });
+
+    // Build the handoff workflow — Router is the entry point.
+    // The workflow is registered as "MyAgent" so AG-UI and DevUI work seamlessly.
+    builder.AddWorkflow("MyAgent", (sp, key) =>
+    {
+        var router = sp.GetRequiredKeyedService<AIAgent>("Router");
+        var specialist = sp.GetRequiredKeyedService<AIAgent>("Specialist");
+        return AgentWorkflowBuilder.CreateHandoffBuilderWith(router)
+            .WithHandoffs(router, [specialist])
+            .WithHandoffs(specialist, [router])
+            .Build();
+    }).AddAsAIAgent();
+#endif
 }
 
 // ── AG-UI Protocol ───────────────────────────────────────────────────────────

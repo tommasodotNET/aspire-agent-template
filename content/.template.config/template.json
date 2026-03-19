@@ -106,6 +106,13 @@
       "displayName": "Include MCP Server",
       "defaultValue": "false"
     },
+    "IncludeHandoff": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Include a multi-agent handoff workflow with Router and Specialist agents.",
+      "displayName": "Include Multi-Agent Handoff",
+      "defaultValue": "false"
+    },
     "GeneratedClassNamePrefix": {
       "type": "generated",
       "generator": "regex",

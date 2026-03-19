@@ -18,6 +18,10 @@
     <!-- MCP client for connecting to the MCP server and discovering tools -->
     <PackageReference Include="ModelContextProtocol.Core" Version="1.1.0" />
 <!--#endif -->
+<!--#if (IncludeHandoff) -->
+    <!-- Multi-agent workflow orchestration (handoff, sequential, concurrent) -->
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.0.0-rc4" />
+<!--#endif -->
   </ItemGroup>
 
   <ItemGroup>
