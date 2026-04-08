@@ -1,0 +1,200 @@
+@page "/"
+@using System.Net.Http
+@using System.Text
+@using System.Text.Json
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JS
+
+<PageTitle>XmlEncodedProjectName Chat</PageTitle>
+
+<div style="max-width:700px;margin:2rem auto;padding:0 1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h1 style="color:#6366f1;margin:0;">🤖 XmlEncodedProjectName</h1>
+        @if (_messages.Count > 0)
+        {
+            <button @onclick="ClearChat"
+                    style="padding:.5rem 1rem;background:transparent;color:#94a3b8;border:1px solid #e2e8f0;border-radius:8px;font-size:.875rem;cursor:pointer;">
+                Clear
+            </button>
+        }
+    </div>
+
+    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:1.5rem;min-height:400px;max-height:600px;overflow-y:auto;margin-bottom:1rem;">
+        @if (_messages.Count == 0)
+        {
+            <div style="display:flex;align-items:center;justify-content:center;height:350px;color:#94a3b8;">
+                <p>Ask me to manage your todo list — add, complete, or list items!</p>
+            </div>
+        }
+        @foreach (var msg in _messages)
+        {
+            var isUser = msg.Role == "user";
+            <div style="display:flex;justify-content:@(isUser ? "flex-end" : "flex-start");margin-bottom:.75rem;">
+                <div style="max-width:80%;padding:.75rem 1rem;border-radius:12px;background:@(isUser ? "#6366f1" : "#f1f5f9");color:@(isUser ? "#fff" : "#334155");white-space:pre-wrap;">
+                    @msg.Content
+                </div>
+            </div>
+        }
+        @if (_isStreaming)
+        {
+            <div style="display:flex;justify-content:flex-start;margin-bottom:.75rem;">
+                <div style="padding:.75rem 1rem;border-radius:12px;background:#f1f5f9;color:#94a3b8;">
+                    <span class="typing-indicator">●●●</span>
+                </div>
+            </div>
+        }
+        <div @ref="_scrollAnchor"></div>
+    </div>
+
+    <form @onsubmit="SendMessage" style="display:flex;gap:.5rem;">
+        <input @bind="_input" @bind:event="oninput" placeholder="Type a message..."
+               disabled="@(_isStreaming || _isSending)"
+               style="flex:1;padding:.75rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem;outline:none;" />
+        <button type="submit" disabled="@(_isStreaming || _isSending || string.IsNullOrWhiteSpace(_input))"
+                style="padding:.75rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;">
+            Send
+        </button>
+    </form>
+</div>
+
+<style>
+    .typing-indicator {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: .3; }
+        50% { opacity: 1; }
+    }
+</style>
+
+@code {
+    private const string AgentName = "GeneratedClassNamePrefix";
+    private readonly List<ChatMessageDto> _messages = [];
+    private string _input = "";
+    private string? _conversationId;
+    private bool _isStreaming;
+    private bool _isSending;
+    private ElementReference _scrollAnchor;
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await Task.Yield();
+            await JS.InvokeVoidAsync("window.scrollToElement", _scrollAnchor);
+        }
+        catch { /* ignore during pre-render */ }
+    }
+
+    private void ClearChat()
+    {
+        _messages.Clear();
+        _conversationId = null;
+    }
+
+    /// <summary>Create a server-side conversation if we don't have one yet.</summary>
+    private async Task<string> EnsureConversationAsync(HttpClient httpClient)
+    {
+        if (_conversationId is not null) return _conversationId;
+
+        var body = JsonSerializer.Serialize(new { metadata = new { agent_id = AgentName } });
+        using var req = new HttpRequestMessage(HttpMethod.Post, "v1/conversations");
+        req.Content = new StringContent(body, Encoding.UTF8, "application/json");
+        using var res = await httpClient.SendAsync(req);
+        res.EnsureSuccessStatusCode();
+
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        _conversationId = doc.RootElement.GetProperty("id").GetString()!;
+        return _conversationId;
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_input)) return;
+
+        var userMessage = _input.Trim();
+        _input = "";
+        _messages.Add(new("user", userMessage));
+        _isSending = true;
+        await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("AgentApi");
+            var conversationId = await EnsureConversationAsync(httpClient);
+
+            // Send only the latest user message — the server maintains conversation history
+            var json = JsonSerializer.Serialize(new
+            {
+                input = new[] { new { type = "message", role = "user", content = userMessage } },
+                stream = true,
+                metadata = new { entity_id = AgentName },
+                conversation = conversationId
+            });
+
+            _messages.Add(new("assistant", ""));
+            _isSending = false;
+            _isStreaming = true;
+            await InvokeAsync(StateHasChanged);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, "v1/responses");
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Headers.Accept.Add(new("text/event-stream"));
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {errorBody}");
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrEmpty(line) || !line.StartsWith("data: ")) continue;
+
+                var eventJson = line["data: ".Length..];
+                if (eventJson == "[DONE]") break;
+
+                using var doc = JsonDocument.Parse(eventJson);
+                if (!doc.RootElement.TryGetProperty("type", out var typeProp)) continue;
+                var type = typeProp.GetString();
+
+                if (type == "response.output_text.delta" &&
+                    doc.RootElement.TryGetProperty("delta", out var delta))
+                {
+                    var text = delta.GetString();
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        _messages[^1] = _messages[^1] with { Content = _messages[^1].Content + text };
+                        await InvokeAsync(StateHasChanged);
+                        await ScrollToBottom();
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(_messages[^1].Content))
+            {
+                _messages[^1] = new("assistant", "No response received.");
+            }
+        }
+        catch (Exception ex)
+        {
+            if (_messages.Count > 0 && _messages[^1].Role == "assistant" && string.IsNullOrEmpty(_messages[^1].Content))
+                _messages[^1] = new("assistant", $"Error: {ex.Message}");
+            else
+                _messages.Add(new("assistant", $"Error: {ex.Message}"));
+        }
+        finally
+        {
+            _isStreaming = false;
+            _isSending = false;
+            await InvokeAsync(StateHasChanged);
+            await ScrollToBottom();
+        }
+    }
+
+    private record ChatMessageDto(string Role, string Content);
+}
