@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/ide.host",
+  "symbolInfo": [
+    {
+      "id": "provider",
+      "isVisible": true,
+      "persistenceScope": "shared",
+      "persistenceScopeName": "aspireAgentTemplates"
+    },
+    {
+      "id": "IncludeWeb",
+      "isVisible": true,
+      "persistenceScope": "templateGroup"
+    },
+    {
+      "id": "IncludeMcp",
+      "isVisible": true,
+      "persistenceScope": "templateGroup"
+    },
+    {
+      "id": "IncludeHandoff",
+      "isVisible": true,
+      "persistenceScope": "templateGroup"
+    }
+  ]
+}

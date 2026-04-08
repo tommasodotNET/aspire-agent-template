@@ -2,9 +2,4 @@
   <Project Path="XmlEncodedProjectName.AppHost\XmlEncodedProjectName.AppHost.csproj" />
   <Project Path="XmlEncodedProjectName.ServiceDefaults\XmlEncodedProjectName.ServiceDefaults.csproj" />
   <Project Path="XmlEncodedProjectName.Agent\XmlEncodedProjectName.Agent.csproj" />
-  <Project Path="XmlEncodedProjectName.Web\XmlEncodedProjectName.Web.csproj" />
-  <Project Path="XmlEncodedProjectName.Tests\XmlEncodedProjectName.Tests.csproj" />
-<!--#if (IncludeMcp) -->
-  <Project Path="XmlEncodedProjectName.Mcp\XmlEncodedProjectName.Mcp.csproj" />
-<!--#endif -->
 </Solution>

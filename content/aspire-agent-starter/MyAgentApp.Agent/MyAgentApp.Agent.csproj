@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UserSecretsId>aspire-agent-service</UserSecretsId>
+    <UserSecretsId>39526101-5dc0-4c36-b284-3e9a9258d02e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>aspire-agent-apphost</UserSecretsId>
+    <UserSecretsId>2c3c728d-7a72-456d-a661-ae0ac83f029b</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\XmlEncodedProjectName.Agent\XmlEncodedProjectName.Agent.csproj" />
+<!--#if (IncludeWeb) -->
     <ProjectReference Include="..\XmlEncodedProjectName.Web\XmlEncodedProjectName.Web.csproj" />
+<!--#endif -->
 <!--#if (IncludeMcp) -->
     <ProjectReference Include="..\XmlEncodedProjectName.Mcp\XmlEncodedProjectName.Mcp.csproj" />
 <!--#endif -->

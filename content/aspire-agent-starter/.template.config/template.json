@@ -1,12 +1,12 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "Copilot + lerich",
+  "author": "Leslie Richardson",
   "classifications": ["Aspire", "AI", "Agent", "Web"],
-  "identity": "AspireAgentTemplate",
-  "name": "Aspire AI Agent App",
+  "identity": "AspireAgentStarterTemplate",
+  "name": "Aspire AI Agent Starter App",
   "defaultName": "AspireAgentApp",
-  "shortName": "aspire-agent",
-  "description": "A .NET Aspire solution with an AI agent service (Microsoft Agent Framework), Blazor chat UI, and sample tests.",
+  "shortName": "aspire-agent-starter",
+  "description": "A .NET Aspire solution with an AI agent, sample domain tools, Blazor chat UI, and optional MCP server. Use aspire-agent for a minimal starting point.",
   "sourceName": "MyAgentApp",
   "preferNameDirectory": false,
   "tags": {
@@ -14,6 +14,10 @@
     "type": "solution",
     "editorTreatAs": "solution"
   },
+  "guids": [
+    "2c3c728d-7a72-456d-a661-ae0ac83f029b",
+    "39526101-5dc0-4c36-b284-3e9a9258d02e"
+  ],
   "sources": [
     {
       "source": "./",
@@ -30,6 +34,12 @@
           "exclude": [
             "MyAgentApp.Mcp/**",
             "MyAgentApp.Agent/McpToolProvider.cs"
+          ]
+        },
+        {
+          "condition": "(!IncludeWeb)",
+          "exclude": [
+            "MyAgentApp.Web/**"
           ]
         }
       ]
@@ -125,6 +135,13 @@
       "displayName": "Include Multi-Agent Handoff",
       "defaultValue": "false"
     },
+    "IncludeWeb": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Include a Blazor web frontend with chat UI. When false, use DevUI at /devui for testing.",
+      "displayName": "Include Web Frontend",
+      "defaultValue": "true"
+    },
     "GeneratedClassNamePrefix": {
       "type": "generated",
       "generator": "regex",
@@ -148,10 +165,7 @@
     "appHostHttpPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 15000,
-        "high": 15300
-      }
+      "parameters": { "low": 15000, "high": 15300 }
     },
     "appHostHttpPortReplacer": {
       "type": "generated",
@@ -170,10 +184,7 @@
     "appHostHttpsPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 17000,
-        "high": 17300
-      }
+      "parameters": { "low": 17000, "high": 17300 }
     },
     "appHostHttpsPortReplacer": {
       "type": "generated",
@@ -192,10 +203,7 @@
     "appHostOtlpHttpPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 19000,
-        "high": 19300
-      }
+      "parameters": { "low": 19000, "high": 19300 }
     },
     "appHostOtlpHttpPortReplacer": {
       "type": "generated",
@@ -214,10 +222,7 @@
     "appHostOtlpHttpsPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 21000,
-        "high": 21300
-      }
+      "parameters": { "low": 21000, "high": 21300 }
     },
     "appHostOtlpHttpsPortReplacer": {
       "type": "generated",
@@ -236,10 +241,7 @@
     "appHostResourceHttpPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 20000,
-        "high": 20300
-      }
+      "parameters": { "low": 20000, "high": 20300 }
     },
     "appHostResourceHttpPortReplacer": {
       "type": "generated",
@@ -258,10 +260,7 @@
     "appHostResourceHttpsPortGenerated": {
       "type": "generated",
       "generator": "port",
-      "parameters": {
-        "low": 22000,
-        "high": 22300
-      }
+      "parameters": { "low": 22000, "high": 22300 }
     },
     "appHostResourceHttpsPortReplacer": {
       "type": "generated",
@@ -288,10 +287,8 @@
       "path": "MyAgentApp.Agent/MyAgentApp.Agent.csproj"
     },
     {
-      "path": "MyAgentApp.Web/MyAgentApp.Web.csproj"
-    },
-    {
-      "path": "MyAgentApp.Tests/MyAgentApp.Tests.csproj"
+      "path": "MyAgentApp.Web/MyAgentApp.Web.csproj",
+      "condition": "(IncludeWeb)"
     },
     {
       "path": "MyAgentApp.Mcp/MyAgentApp.Mcp.csproj",
@@ -305,19 +302,13 @@
       "manualInstructions": [],
       "actionId": "5BECCC32-4D5A-4476-A0F9-BD2E81AF0689",
       "condition": "(hostIdentifier == \"vs\")",
-      "args": {
-        "projects": "0"
-      }
+      "args": { "projects": "0" }
     },
     {
       "id": "restore",
       "condition": "(!skipRestore)",
       "description": "Restore NuGet packages required by this project.",
-      "manualInstructions": [
-        {
-          "text": "Run 'dotnet restore'"
-        }
-      ],
+      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
       "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
       "continueOnError": true
     }

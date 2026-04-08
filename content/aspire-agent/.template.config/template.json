@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Leslie Richardson",
+  "classifications": ["Aspire", "AI", "Agent"],
+  "identity": "AspireAgentTemplate",
+  "name": "Aspire AI Agent App",
+  "defaultName": "AspireAgentApp",
+  "shortName": "aspire-agent",
+  "description": "An empty .NET Aspire solution with an AI agent service (Microsoft Agent Framework) and DevUI for testing. Add tools, web UI, and MCP with aspire-agent-starter.",
+  "sourceName": "MyAgentApp",
+  "preferNameDirectory": false,
+  "tags": {
+    "language": "C#",
+    "type": "solution",
+    "editorTreatAs": "solution"
+  },
+  "guids": [
+    "a5b76a3f-4df3-4ff4-be6c-017d0e9a3abe",
+    "ed59126a-be2b-49b0-aa0e-2fd340467fec"
+  ],
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "modifiers": [
+        {
+          "condition": "(hostIdentifier != \"dotnetcli\" && hostIdentifier != \"dotnetcli-preview\")",
+          "exclude": [
+            "*.slnx"
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net10.0",
+          "description": "Target .NET 10"
+        }
+      ],
+      "replaces": "net10.0",
+      "defaultValue": "net10.0"
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "If specified, skips the automatic restore of the project on create.",
+      "defaultValue": "false"
+    },
+    "hostIdentifier": {
+      "type": "bind",
+      "binding": "HostIdentifier"
+    },
+    "XmlEncodedProjectName": {
+      "type": "derived",
+      "datatype": "string",
+      "replaces": "XmlEncodedProjectName",
+      "valueSource": "name",
+      "valueTransform": "xmlEncode"
+    },
+    "provider": {
+      "type": "parameter",
+      "datatype": "choice",
+      "description": "The AI model provider to use.",
+      "displayName": "AI Provider",
+      "choices": [
+        {
+          "choice": "Foundry",
+          "description": "Azure AI Foundry — typed model deployment, auto-provisioning with azd"
+        },
+        {
+          "choice": "FoundryLocal",
+          "description": "Foundry Local — zero-config local LLM, no Azure account needed"
+        },
+        {
+          "choice": "AzureOpenAI",
+          "description": "Azure OpenAI Service (connection string)"
+        },
+        {
+          "choice": "OpenAI",
+          "description": "OpenAI API (also works with GitHub Models)"
+        }
+      ],
+      "defaultValue": "Foundry"
+    },
+    "UseFoundry": {
+      "type": "computed",
+      "value": "(provider == \"Foundry\")"
+    },
+    "UseFoundryLocal": {
+      "type": "computed",
+      "value": "(provider == \"FoundryLocal\")"
+    },
+    "UseAnyFoundry": {
+      "type": "computed",
+      "value": "(provider == \"Foundry\" || provider == \"FoundryLocal\")"
+    },
+    "UseAzureOpenAI": {
+      "type": "computed",
+      "value": "(provider == \"AzureOpenAI\")"
+    },
+    "UseOpenAI": {
+      "type": "computed",
+      "value": "(provider == \"OpenAI\")"
+    },
+    "GeneratedClassNamePrefix": {
+      "type": "generated",
+      "generator": "regex",
+      "datatype": "string",
+      "replaces": "GeneratedClassNamePrefix",
+      "parameters": {
+        "source": "name",
+        "steps": [
+          {
+            "regex": "(((?<=\\.)|^)(?=\\d)|\\W)",
+            "replacement": "_"
+          }
+        ]
+      }
+    },
+    "appHostHttpPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the HTTP endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostHttpPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 15000, "high": 15300 }
+    },
+    "appHostHttpPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostHttpPort",
+        "fallbackVariableName": "appHostHttpPortGenerated"
+      },
+      "replaces": "15000"
+    },
+    "appHostHttpsPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the HTTPS endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostHttpsPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 17000, "high": 17300 }
+    },
+    "appHostHttpsPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostHttpsPort",
+        "fallbackVariableName": "appHostHttpsPortGenerated"
+      },
+      "replaces": "17000"
+    },
+    "appHostOtlpHttpPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the OTLP HTTP endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostOtlpHttpPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 19000, "high": 19300 }
+    },
+    "appHostOtlpHttpPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostOtlpHttpPort",
+        "fallbackVariableName": "appHostOtlpHttpPortGenerated"
+      },
+      "replaces": "19000"
+    },
+    "appHostOtlpHttpsPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the OTLP HTTPS endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostOtlpHttpsPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 21000, "high": 21300 }
+    },
+    "appHostOtlpHttpsPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostOtlpHttpsPort",
+        "fallbackVariableName": "appHostOtlpHttpsPortGenerated"
+      },
+      "replaces": "21000"
+    },
+    "appHostResourceHttpPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the resource service HTTP endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostResourceHttpPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 20000, "high": 20300 }
+    },
+    "appHostResourceHttpPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostResourceHttpPort",
+        "fallbackVariableName": "appHostResourceHttpPortGenerated"
+      },
+      "replaces": "20000"
+    },
+    "appHostResourceHttpsPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the resource service HTTPS endpoint in launchSettings.json of the AppHost project."
+    },
+    "appHostResourceHttpsPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": { "low": 22000, "high": 22300 }
+    },
+    "appHostResourceHttpsPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "appHostResourceHttpsPort",
+        "fallbackVariableName": "appHostResourceHttpsPortGenerated"
+      },
+      "replaces": "22000"
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "MyAgentApp.slnx",
+      "condition": "(hostIdentifier == \"dotnetcli\" || hostIdentifier == \"dotnetcli-preview\")"
+    },
+    {
+      "path": "MyAgentApp.AppHost/MyAgentApp.AppHost.csproj"
+    },
+    {
+      "path": "MyAgentApp.ServiceDefaults/MyAgentApp.ServiceDefaults.csproj"
+    },
+    {
+      "path": "MyAgentApp.Agent/MyAgentApp.Agent.csproj"
+    }
+  ],
+  "postActions": [
+    {
+      "id": "set-startup-project",
+      "description": "Sets the startup project in the solution",
+      "manualInstructions": [],
+      "actionId": "5BECCC32-4D5A-4476-A0F9-BD2E81AF0689",
+      "condition": "(hostIdentifier == \"vs\")",
+      "args": { "projects": "0" }
+    },
+    {
+      "id": "restore",
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

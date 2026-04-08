@@ -77,7 +77,6 @@ XmlEncodedProjectName.Web --AG-UI (SSE)--> XmlEncodedProjectName.Agent
 | **XmlEncodedProjectName.Agent** | AI agent service with AG-UI endpoint, DevUI, tools |
 | **XmlEncodedProjectName.Web** | Blazor Server chat UI with streaming responses |
 | **XmlEncodedProjectName.ServiceDefaults** | Shared OpenTelemetry, health checks, resilience |
-| **XmlEncodedProjectName.Tests** | xUnit tests for domain tools |
 <!--#if (IncludeMcp) -->
 | **XmlEncodedProjectName.Mcp** | MCP server hosting external tools (Model Context Protocol) |
 <!--#endif -->
@@ -290,12 +289,6 @@ Replace `TodoService` with your own domain (e.g., database-backed Orders, Custom
 1. Create your service class and register in DI
 2. Create a tools class that wraps your service methods
 3. Update the `AIAgent` registration to use your tools
-
-## Running Tests
-
-```bash
-dotnet test
-```
 
 ## Learn More
 

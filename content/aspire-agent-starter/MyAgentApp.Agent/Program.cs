@@ -14,34 +14,24 @@ builder.AddServiceDefaults();
 
 // ── Domain Services ─────────────────────────────────────────────────────────
 // Register your domain services here. The AI agent calls these through tools.
-// Architecture: API request → Agent → Tools → Domain Service
 
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │ REPLACE: Swap TodoService with your own domain service.                │
+// │ This is a sample in-memory todo list — replace it with your business   │
+// │ logic (e.g., order management, document processing, data queries).     │
+// └─────────────────────────────────────────────────────────────────────────┘
 builder.Services.AddSingleton<TodoService>();
 
 #if (IncludeMcp)
 // ── MCP Tool Discovery ──────────────────────────────────────────────────────
-// McpToolProvider connects to the MCP server at startup (via Aspire service
-// discovery) and discovers available tools. The agent merges these with
-// in-process tools automatically.
 builder.Services.AddSingleton<McpToolProvider>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<McpToolProvider>());
 #endif
 
 // ── LLM Client (Aspire-native) ──────────────────────────────────────────────
 #if (UseAnyFoundry)
-// Foundry: IChatClient is registered automatically via Aspire service discovery.
-// The deployment is declared in the AppHost — no manual config needed here.
-// The configureSettings callback ensures the endpoint includes /models, which
-// the Azure.AI.Inference SDK requires but Aspire Foundry doesn't add yet (preview).
-builder.AddAzureChatCompletionsClient("chat", settings =>
-{
-    if (settings.Endpoint is not null &&
-        !settings.Endpoint.AbsolutePath.TrimEnd('/').EndsWith("models", StringComparison.OrdinalIgnoreCase))
-    {
-        settings.Endpoint = new Uri(settings.Endpoint.ToString().TrimEnd('/') + "/models");
-    }
-})
-.AddChatClient("chat");
+builder.AddAzureChatCompletionsClient("chat")
+    .AddChatClient("chat");
 #elif (UseAzureOpenAI)
 // Azure OpenAI connection string. Set in AppHost user-secrets:
 //   cd MyAgentApp.AppHost
@@ -55,18 +45,22 @@ builder.AddAzureChatCompletionsClient("chat", settings =>
 
 #if (UseAnyFoundry)
 {
-    // Register the agent using the Hosting pattern so DevUI can discover it.
 #if (!IncludeHandoff)
     builder.AddAIAgent("MyAgent", (sp, name) =>
     {
         var chatClient = sp.GetRequiredService<IChatClient>();
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Swap TodoTools with your own AI tool functions.        │
+        // └─────────────────────────────────────────────────────────────────┘
         var todoTools = new TodoTools(sp.GetRequiredService<TodoService>());
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
-        // Merge MCP tools (discovered at startup) with in-process tools.
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
         tools.AddRange(mcpToolProvider.Tools);
 #endif
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Update the instructions to describe your agent's role. │
+        // └─────────────────────────────────────────────────────────────────┘
         return chatClient.AsAIAgent(
             name: name,
             instructions: """
@@ -86,15 +80,8 @@ builder.AddAzureChatCompletionsClient("chat", settings =>
     // Every tool schema adds ~200-400 tokens per LLM call. With 5+ agents
     // in a handoff chain, unnecessary tools multiply quickly.
     //
-    // Example (Interview Coach pattern):
-    //   Router: no tools (routing only)
-    //   Receptionist: create_session, get_session, update_session
-    //   Interviewer: get_session, update_session
-    //   Summariser: get_session, complete_session
-    //
     // CAPACITY: Multi-agent handoff requires 2+ LLM calls per user message
     // (router + specialist). Budget 50K+ TPM for smooth interactive use.
-    // TODO: Add more specialist agents for different domains.
 
     builder.AddAIAgent("Router", (sp, name) =>
     {
@@ -118,6 +105,9 @@ builder.AddAzureChatCompletionsClient("chat", settings =>
     builder.AddAIAgent("Specialist", (sp, name) =>
     {
         var chatClient = sp.GetRequiredService<IChatClient>();
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Swap TodoTools with your specialist's domain tools.    │
+        // └─────────────────────────────────────────────────────────────────┘
         var todoTools = new TodoTools(sp.GetRequiredService<TodoService>());
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
@@ -135,10 +125,6 @@ builder.AddAzureChatCompletionsClient("chat", settings =>
             tools: tools);
     });
 
-    // Build the handoff workflow — Router is the entry point.
-    // We register as BOTH Workflow (for DevUI graph visualization) and AIAgent (for chat).
-    // Note: We bypass AddWorkflow because HandoffsWorkflowBuilder.Build() doesn't set
-    // the workflow name, causing AddWorkflow's name validation to fail.
     builder.Services.AddKeyedSingleton<Workflow>("MyAgent", (sp, key) =>
     {
         var router = sp.GetRequiredKeyedService<AIAgent>("Router");
@@ -158,26 +144,29 @@ var connectionString = builder.Configuration.GetConnectionString("openai");
 if (!string.IsNullOrEmpty(connectionString))
 {
 #if (UseOpenAI)
-    // Auto-detects provider (OpenAI or Azure OpenAI) from connection string format
     builder.AddOpenAIClientFromConfiguration("openai");
 #else
     builder.AddAzureOpenAIClient("openai");
 #endif
 
-    // Register the agent using the Hosting pattern so DevUI can discover it.
     var deployment = builder.Configuration["OpenAI:Deployment"] ?? "gpt-4o-mini";
 #if (!IncludeHandoff)
     builder.AddAIAgent("MyAgent", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
         var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Swap TodoTools with your own AI tool functions.        │
+        // └─────────────────────────────────────────────────────────────────┘
         var todoTools = new TodoTools(sp.GetRequiredService<TodoService>());
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
-        // Merge MCP tools (discovered at startup) with in-process tools.
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
         tools.AddRange(mcpToolProvider.Tools);
 #endif
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Update the instructions to describe your agent's role. │
+        // └─────────────────────────────────────────────────────────────────┘
         return chatClient.AsAIAgent(
             name: name,
             instructions: """
@@ -189,18 +178,6 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 #else
     // ── Multi-Agent Handoff Workflow ─────────────────────────────────────────
-    // Router: classifies user intent and routes to the appropriate specialist.
-    // Specialist: handles domain-specific tasks using tools.
-    //
-    // TOKEN OPTIMIZATION: The Router agent has NO tools — it only routes.
-    // When adding more specialists, give each agent ONLY the tools it needs.
-    // Every tool schema adds ~200-400 tokens per LLM call. With 5+ agents
-    // in a handoff chain, unnecessary tools multiply quickly.
-    //
-    // CAPACITY: Multi-agent handoff requires 2+ LLM calls per user message
-    // (router + specialist). Budget 50K+ TPM for smooth interactive use.
-    // TODO: Add more specialist agents for different domains.
-
     builder.AddAIAgent("Router", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
@@ -225,6 +202,9 @@ if (!string.IsNullOrEmpty(connectionString))
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
         var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ REPLACE: Swap TodoTools with your specialist's domain tools.    │
+        // └─────────────────────────────────────────────────────────────────┘
         var todoTools = new TodoTools(sp.GetRequiredService<TodoService>());
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
@@ -242,10 +222,6 @@ if (!string.IsNullOrEmpty(connectionString))
             tools: tools);
     });
 
-    // Build the handoff workflow — Router is the entry point.
-    // We register as BOTH Workflow (for DevUI graph visualization) and AIAgent (for chat).
-    // Note: We bypass AddWorkflow because HandoffsWorkflowBuilder.Build() doesn't set
-    // the workflow name, causing AddWorkflow's name validation to fail.
     builder.Services.AddKeyedSingleton<Workflow>("MyAgent", (sp, key) =>
     {
         var router = sp.GetRequiredKeyedService<AIAgent>("Router");
@@ -263,8 +239,6 @@ if (!string.IsNullOrEmpty(connectionString))
 #endif
 
 // ── AG-UI Protocol ───────────────────────────────────────────────────────────
-// AG-UI provides standardized streaming communication between the agent and
-// web clients via Server-Sent Events (SSE).
 builder.Services.AddAGUI();
 
 // ── OpenAI-compatible API (required by DevUI) ───────────────────────────────
@@ -275,23 +249,15 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-// ── AG-UI Endpoint (streaming) ───────────────────────────────────────────────
-// POST /api/agui — streams agent responses as Server-Sent Events.
-// The WebUI uses AGUIChatClient to connect to this endpoint.
 var agent = app.Services.GetKeyedService<AIAgent>("MyAgent");
 if (agent is not null)
 {
     app.MapAGUI("/api/agui", agent);
 }
 
-// Map OpenAI-compatible endpoints (required by DevUI)
 app.MapOpenAIResponses();
 app.MapOpenAIConversations();
 
-// ── DevUI (Development only) ────────────────────────────────────────────────
-// DevUI provides a web interface for testing and debugging the agent —
-// inspect tools, trace calls, and chat without the Blazor UI.
-// Access it at: {agent-service-url}/devui
 if (app.Environment.IsDevelopment())
 {
     app.MapDevUI();

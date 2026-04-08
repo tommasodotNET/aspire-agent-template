@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "provider": {
+      "longName": "provider",
+      "shortName": ""
+    },
+    "IncludeWeb": {
+      "longName": "include-web",
+      "shortName": ""
+    },
+    "IncludeMcp": {
+      "longName": "include-mcp",
+      "shortName": ""
+    },
+    "IncludeHandoff": {
+      "longName": "include-handoff",
+      "shortName": ""
+    },
+    "appHostHttpPort": {
+      "isHidden": true
+    },
+    "appHostHttpsPort": {
+      "isHidden": true
+    },
+    "appHostOtlpHttpPort": {
+      "isHidden": true
+    },
+    "appHostOtlpHttpsPort": {
+      "isHidden": true
+    },
+    "appHostResourceHttpPort": {
+      "isHidden": true
+    },
+    "appHostResourceHttpsPort": {
+      "isHidden": true
+    }
+  },
+  "usageExamples": [
+    "--provider Foundry --include-mcp",
+    "--provider OpenAI --include-web --include-handoff"
+  ]
+}
