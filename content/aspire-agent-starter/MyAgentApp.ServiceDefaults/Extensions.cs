@@ -19,7 +19,15 @@ public static class Extensions
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            http.AddStandardResilienceHandler();
+            http.AddStandardResilienceHandler(options =>
+            {
+                // AI workloads: multi-agent handoff + SSE streaming can take minutes.
+                // Retries cause duplicate LLM work; circuit breaker breaks SSE streams.
+                options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(5);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(10);
+                options.Retry.MaxRetryAttempts = 1;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(30);
+            });
             http.AddServiceDiscovery();
         });
         return builder;

@@ -18,6 +18,23 @@
     "2c3c728d-7a72-456d-a661-ae0ac83f029b",
     "39526101-5dc0-4c36-b284-3e9a9258d02e"
   ],
+  "specialCustomOperations": {
+    "**/*.razor": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": ["#if"],
+            "else": ["#else"],
+            "elseif": ["#elseif"],
+            "endif": ["#endif"],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    }
+  },
   "sources": [
     {
       "source": "./",

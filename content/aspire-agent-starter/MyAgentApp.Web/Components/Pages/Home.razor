@@ -71,7 +71,9 @@
     private const string AgentName = "GeneratedClassNamePrefix";
     private readonly List<ChatMessageDto> _messages = [];
     private string _input = "";
+#if (!IncludeHandoff)
     private string? _conversationId;
+#endif
     private bool _isStreaming;
     private bool _isSending;
     private ElementReference _scrollAnchor;
@@ -89,9 +91,12 @@
     private void ClearChat()
     {
         _messages.Clear();
+#if (!IncludeHandoff)
         _conversationId = null;
+#endif
     }
 
+#if (!IncludeHandoff)
     /// <summary>Create a server-side conversation if we don't have one yet.</summary>
     private async Task<string> EnsureConversationAsync(HttpClient httpClient)
     {
@@ -107,6 +112,7 @@
         _conversationId = doc.RootElement.GetProperty("id").GetString()!;
         return _conversationId;
     }
+#endif
 
     private async Task SendMessage()
     {
@@ -122,6 +128,15 @@
         try
         {
             var httpClient = HttpClientFactory.CreateClient("AgentApi");
+
+#if (IncludeHandoff)
+            // AG-UI: Send full conversation history (avoids server-side state corruption with handoff)
+            var aguiMessages = _messages
+                .Where(m => !string.IsNullOrEmpty(m.Content))
+                .Select(m => new { role = m.Role, content = m.Content })
+                .ToArray();
+            var json = JsonSerializer.Serialize(new { messages = aguiMessages });
+#else
             var conversationId = await EnsureConversationAsync(httpClient);
 
             // Send only the latest user message — the server maintains conversation history
@@ -132,12 +147,48 @@
                 metadata = new { entity_id = AgentName },
                 conversation = conversationId
             });
+#endif
 
             _messages.Add(new("assistant", ""));
             _isSending = false;
             _isStreaming = true;
             await InvokeAsync(StateHasChanged);
 
+#if (IncludeHandoff)
+            // Stream from AG-UI endpoint (SSE)
+            using var request = new HttpRequestMessage(HttpMethod.Post, "api/agui");
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Headers.Accept.Add(new("text/event-stream"));
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {errorBody}");
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrEmpty(line) || !line.StartsWith("data: ")) continue;
+
+                var eventJson = line["data: ".Length..];
+                using var doc = JsonDocument.Parse(eventJson);
+                var type = doc.RootElement.GetProperty("type").GetString();
+                if (type == "TEXT_MESSAGE_CONTENT" &&
+                    doc.RootElement.TryGetProperty("delta", out var delta))
+                {
+                    var text = delta.GetString();
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        _messages[^1] = _messages[^1] with { Content = _messages[^1].Content + text };
+                        await InvokeAsync(StateHasChanged);
+                        await ScrollToBottom();
+                    }
+                }
+            }
+#else
             using var request = new HttpRequestMessage(HttpMethod.Post, "v1/responses");
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             request.Headers.Accept.Add(new("text/event-stream"));
@@ -174,6 +225,7 @@
                     }
                 }
             }
+#endif
 
             if (string.IsNullOrEmpty(_messages[^1].Content))
             {

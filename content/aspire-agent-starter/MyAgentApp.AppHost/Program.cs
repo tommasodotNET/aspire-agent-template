@@ -45,6 +45,7 @@ var agent = builder.AddProject<Projects.MyAgentApp_Agent>("agent")
 #endif
 #if (IncludeMcp)
     .WithReference(mcp)
+    .WaitFor(mcp)
 #endif
     .WithUrlForEndpoint("https", url => url.Url = "/devui");
 

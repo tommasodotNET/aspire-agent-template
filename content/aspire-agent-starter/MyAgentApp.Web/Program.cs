@@ -10,7 +10,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient("AgentApi", client =>
 {
     client.BaseAddress = new Uri("https+http://agent");
-    client.Timeout = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 
 var app = builder.Build();

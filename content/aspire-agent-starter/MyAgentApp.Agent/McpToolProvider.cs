@@ -11,9 +11,13 @@ public class McpToolProvider : IHostedService, IAsyncDisposable
 {
     private readonly IConfiguration _config;
     private readonly ILogger<McpToolProvider> _logger;
+    private readonly TaskCompletionSource _readyTcs = new();
     private McpClient? _mcpClient;
 
     public IReadOnlyList<AITool> Tools { get; private set; } = [];
+
+    /// <summary>Completes when MCP tool discovery has finished (or failed gracefully).</summary>
+    public Task Ready => _readyTcs.Task;
 
     public McpToolProvider(IConfiguration config, ILogger<McpToolProvider> logger)
     {
@@ -30,8 +34,13 @@ public class McpToolProvider : IHostedService, IAsyncDisposable
         if (string.IsNullOrEmpty(mcpServerUrl))
         {
             _logger.LogWarning("MCP server URL not found. MCP tools will not be available.");
+            _readyTcs.SetResult();
             return;
         }
+
+        // Timeout prevents hanging forever if MCP server is unreachable.
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         try
         {
@@ -41,15 +50,23 @@ public class McpToolProvider : IHostedService, IAsyncDisposable
                     Endpoint = new Uri(mcpServerUrl),
                     Name = "mcp-server"
                 }),
-                cancellationToken: cancellationToken);
+                cancellationToken: linkedCts.Token);
 
-            var mcpTools = await _mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
+            var mcpTools = await _mcpClient.ListToolsAsync(cancellationToken: linkedCts.Token);
             Tools = mcpTools.Cast<AITool>().ToList();
             _logger.LogInformation("Discovered {Count} MCP tools from {Url}", Tools.Count, mcpServerUrl);
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+        {
+            _logger.LogWarning("MCP server connection timed out after 30s. Agent will use in-process tools only.");
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to connect to MCP server. Agent will use in-process tools only.");
+        }
+        finally
+        {
+            _readyTcs.TrySetResult();
         }
     }
 

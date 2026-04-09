@@ -3,6 +3,7 @@ using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 #if (IncludeHandoff)
 using Microsoft.Agents.AI.Workflows;
 #endif
@@ -48,7 +49,7 @@ builder.AddAzureChatCompletionsClient("chat")
 #if (!IncludeHandoff)
     builder.AddAIAgent("MyAgent", (sp, name) =>
     {
-        var chatClient = sp.GetRequiredService<IChatClient>();
+        var chatClient = new SafeChatClient(sp.GetRequiredService<IChatClient>(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Swap TodoTools with your own AI tool functions.        │
         // └─────────────────────────────────────────────────────────────────┘
@@ -56,7 +57,7 @@ builder.AddAzureChatCompletionsClient("chat")
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
-        tools.AddRange(mcpToolProvider.Tools);
+        tools.AddRange(SafeAIFunction.WrapAll(mcpToolProvider.Tools));
 #endif
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Update the instructions to describe your agent's role. │
@@ -85,7 +86,7 @@ builder.AddAzureChatCompletionsClient("chat")
 
     builder.AddAIAgent("Router", (sp, name) =>
     {
-        var chatClient = sp.GetRequiredService<IChatClient>();
+        var chatClient = new SafeChatClient(sp.GetRequiredService<IChatClient>(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         return chatClient.AsAIAgent(
             name: name,
             instructions: """
@@ -104,7 +105,7 @@ builder.AddAzureChatCompletionsClient("chat")
 
     builder.AddAIAgent("Specialist", (sp, name) =>
     {
-        var chatClient = sp.GetRequiredService<IChatClient>();
+        var chatClient = new SafeChatClient(sp.GetRequiredService<IChatClient>(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Swap TodoTools with your specialist's domain tools.    │
         // └─────────────────────────────────────────────────────────────────┘
@@ -112,7 +113,7 @@ builder.AddAzureChatCompletionsClient("chat")
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
-        tools.AddRange(mcpToolProvider.Tools);
+        tools.AddRange(SafeAIFunction.WrapAll(mcpToolProvider.Tools));
 #endif
         return chatClient.AsAIAgent(
             name: name,
@@ -154,7 +155,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.AddAIAgent("MyAgent", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
-        var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        var chatClient = new SafeChatClient(openaiClient.GetChatClient(deployment).AsIChatClient(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Swap TodoTools with your own AI tool functions.        │
         // └─────────────────────────────────────────────────────────────────┘
@@ -162,7 +163,7 @@ if (!string.IsNullOrEmpty(connectionString))
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
-        tools.AddRange(mcpToolProvider.Tools);
+        tools.AddRange(SafeAIFunction.WrapAll(mcpToolProvider.Tools));
 #endif
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Update the instructions to describe your agent's role. │
@@ -181,7 +182,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.AddAIAgent("Router", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
-        var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        var chatClient = new SafeChatClient(openaiClient.GetChatClient(deployment).AsIChatClient(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         return chatClient.AsAIAgent(
             name: name,
             instructions: """
@@ -201,7 +202,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.AddAIAgent("Specialist", (sp, name) =>
     {
         var openaiClient = sp.GetRequiredService<OpenAI.OpenAIClient>();
-        var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
+        var chatClient = new SafeChatClient(openaiClient.GetChatClient(deployment).AsIChatClient(), sp.GetRequiredService<ILogger<SafeChatClient>>());
         // ┌─────────────────────────────────────────────────────────────────┐
         // │ REPLACE: Swap TodoTools with your specialist's domain tools.    │
         // └─────────────────────────────────────────────────────────────────┘
@@ -209,7 +210,7 @@ if (!string.IsNullOrEmpty(connectionString))
         var tools = new List<AITool>(todoTools.AsAIFunctions());
 #if (IncludeMcp)
         var mcpToolProvider = sp.GetRequiredService<McpToolProvider>();
-        tools.AddRange(mcpToolProvider.Tools);
+        tools.AddRange(SafeAIFunction.WrapAll(mcpToolProvider.Tools));
 #endif
         return chatClient.AsAIAgent(
             name: name,
@@ -246,6 +247,16 @@ builder.Services.AddOpenAIResponses();
 builder.Services.AddOpenAIConversations();
 
 var app = builder.Build();
+
+#if (IncludeMcp)
+// Start MCP tool discovery before MapDevUI (which eagerly resolves agents).
+// This avoids deadlock from .GetAwaiter().GetResult() in agent factories.
+var mcpProvider = app.Services.GetRequiredService<McpToolProvider>();
+using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+{
+    await mcpProvider.StartAsync(cts.Token);
+}
+#endif
 
 app.MapDefaultEndpoints();
 
