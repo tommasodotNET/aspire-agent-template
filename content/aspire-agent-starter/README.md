@@ -4,79 +4,34 @@ A full-featured AI agent application built with [.NET Aspire](https://learn.micr
 
 ## Architecture
 
-```
-Browser (Blazor Chat UI)
-  |
-  v
-XmlEncodedProjectName.Web --AG-UI (SSE)--> XmlEncodedProjectName.Agent
-                                |
-                                v
-<!--#if (UseFoundry) -->
-<!--#if (IncludeHandoff) -->
-                            Router Agent (Azure AI Foundry via Aspire)
-                                |
-                                v  handoff
-                            Specialist Agent
-<!--#else -->
-                            AI Agent (Azure AI Foundry via Aspire)
-<!--#endif -->
-<!--#elif (UseFoundryLocal) -->
-<!--#if (IncludeHandoff) -->
-                            Router Agent (Foundry Local)
-                                |
-                                v  handoff
-                            Specialist Agent
-<!--#else -->
-                            AI Agent (Foundry Local)
-<!--#endif -->
-<!--#elif (UseAzureOpenAI) -->
-<!--#if (IncludeHandoff) -->
-                            Router Agent (Azure OpenAI via Aspire)
-                                |
-                                v  handoff
-                            Specialist Agent
-<!--#else -->
-                            AI Agent (Azure OpenAI via Aspire)
-<!--#endif -->
-<!--#else -->
-<!--#if (IncludeHandoff) -->
-                            Router Agent (OpenAI via Aspire)
-                                |
-                                v  handoff
-                            Specialist Agent
-<!--#else -->
-                            AI Agent (OpenAI via Aspire)
-<!--#endif -->
-<!--#endif -->
-                                |
-                                v
-<!--#if (IncludeMcp) -->
-                            TodoTools -> TodoService (in-process)
-                                +
-                            MCP Tools -> XmlEncodedProjectName.Mcp (external)
-<!--#else -->
-                            TodoTools -> TodoService
-<!--#endif -->
+```mermaid
+graph TD
+    Browser["Browser"]
+    Web["Web UI (Blazor)"]
+    Agent["Agent Service"]
+    LLM["LLM Provider"]
+    DevUI["DevUI (/devui)"]
+    Router["Router Agent"]
+    Specialist["Specialist Agent"]
+    Tools["TodoTools (in-process)"]
+    MCP["MCP Tools (external)"]
+
+    Browser --> Web
+    Web -- "AG-UI (SSE)" --> Agent
+    Agent --> LLM
+    Agent --> DevUI
+    Agent --> Router
+    Router -- handoff --> Specialist
+    Specialist --> Tools
+    Specialist --> MCP
 ```
 
-<!--#if (IncludeMcp) -->
-<!--#if (IncludeHandoff) -->
-**The flow:** User message -> Web UI -> AG-UI stream -> Router Agent -> Handoff -> Specialist Agent -> In-process tools + MCP tools -> Domain Service / MCP Server -> Streaming response
-<!--#else -->
-**The flow:** User message -> Web UI -> AG-UI stream -> AI Agent -> In-process tools + MCP tools -> Domain Service / MCP Server -> Streaming response
-<!--#endif -->
-<!--#else -->
-<!--#if (IncludeHandoff) -->
-**The flow:** User message -> Web UI -> AG-UI stream -> Router Agent -> Handoff -> Specialist Agent -> Tool calls -> Domain Service -> Streaming response
-<!--#else -->
-**The flow:** User message -> Web UI -> AG-UI stream -> AI Agent -> Tool calls -> Domain Service -> Streaming response
-<!--#endif -->
-<!--#endif -->
+> Diagram shows the full-featured variant (`--IncludeHandoff --IncludeMcp`). Without those flags, the Router/Specialist become a single AI Agent, and MCP Tools are omitted.
 
 **Key protocols:**
-- **AG-UI** -- Standardized streaming protocol between Web UI and Agent (Server-Sent Events)
-- **Aspire service discovery** -- Agent discovers the LLM via connection string injection
-- **DevUI** -- Built-in dev-time debugging UI at `/devui`
+- **AG-UI** — Standardized streaming protocol between Web UI and Agent (Server-Sent Events)
+- **Aspire service discovery** — Agent discovers the LLM via connection string injection
+- **DevUI** — Built-in dev-time debugging UI at `/devui`
 
 ## Projects
 

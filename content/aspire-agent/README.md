@@ -4,22 +4,16 @@ A minimal AI agent service built with [.NET Aspire](https://learn.microsoft.com/
 
 ## Architecture
 
-```
-XmlEncodedProjectName.AppHost (Aspire orchestrator)
-    |
-    v
-<!--#if (UseFoundry) -->
-XmlEncodedProjectName.Agent --> Azure AI Foundry (auto-provisioned)
-<!--#elif (UseFoundryLocal) -->
-XmlEncodedProjectName.Agent --> Foundry Local (local LLM)
-<!--#elif (UseAzureOpenAI) -->
-XmlEncodedProjectName.Agent --> Azure OpenAI (connection string)
-<!--#else -->
-XmlEncodedProjectName.Agent --> OpenAI API (connection string)
-<!--#endif -->
-    |
-    v
-DevUI (/devui) -- built-in chat & debugging interface
+```mermaid
+graph TD
+    AppHost["AppHost (Aspire Orchestrator)"]
+    Agent["Agent Service"]
+    LLM["LLM Provider"]
+    DevUI["DevUI (/devui)"]
+
+    AppHost --> Agent
+    Agent --> LLM
+    Agent --> DevUI
 ```
 
 ## Projects
