@@ -47,10 +47,10 @@ graph TD
 
 ## Getting Started
 
-<!--#if (UseFoundry) -->
-### 1. Configure Azure AI Foundry
+### 1. Configure Your AI Provider
 
-The model deployment is declared in the AppHost's `Program.cs` — Aspire auto-provisions the Azure AI Foundry resource on first run.
+<!--#if (UseFoundry) -->
+**Azure AI Foundry** — The model deployment is declared in the AppHost's `Program.cs` — Aspire auto-provisions the Azure AI Foundry resource on first run.
 
 Make sure you're logged in:
 
@@ -68,17 +68,13 @@ var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← 
 
 Aspire detects the change automatically and re-provisions on next run (~30-60s).
 <!--#elif (UseFoundryLocal) -->
-### 1. Install Foundry Local
-
-Install Foundry Local for zero-config local LLM:
+**Foundry Local** — Install Foundry Local for zero-config local LLM:
 https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started
 
 No Azure account or API keys needed. The model runs entirely on your machine.
 
 <!--#elif (UseAzureOpenAI) -->
-### 1. Configure Azure OpenAI
-
-Set the connection string in the **AppHost** project:
+**Azure OpenAI** — Set the connection string in the **AppHost** project:
 
 ```bash
 cd XmlEncodedProjectName.AppHost
@@ -98,9 +94,7 @@ cd XmlEncodedProjectName.Agent
 dotnet user-secrets set "OpenAI:Deployment" "gpt-4o-mini"
 ```
 <!--#else -->
-### 1. Configure OpenAI
-
-Set the connection string in the **AppHost** project:
+**OpenAI** — Set the connection string in the **AppHost** project:
 
 ```bash
 cd XmlEncodedProjectName.AppHost

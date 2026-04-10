@@ -26,29 +26,25 @@ graph TD
 
 ## Getting Started
 
+### 1. Configure Your AI Provider
+
 <!--#if (UseFoundry) -->
-### 1. Configure Azure AI Foundry
+**Azure AI Foundry** — The model deployment is declared in the AppHost — Aspire provisions it automatically on first run.
 
-The model deployment is declared in the AppHost — `azd up` will provision it automatically.
-
-For local development, make sure you're logged in:
+Make sure you're logged in:
 
 ```bash
 az login
 ```
 
 <!--#elif (UseFoundryLocal) -->
-### 1. Install Foundry Local
-
-Install Foundry Local for zero-config local LLM:
+**Foundry Local** — Install Foundry Local for zero-config local LLM:
 https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started
 
 No Azure account or API keys needed.
 
 <!--#elif (UseAzureOpenAI) -->
-### 1. Configure Azure OpenAI
-
-Set the connection string in the **AppHost** project:
+**Azure OpenAI** — Set the connection string in the **AppHost** project:
 
 ```bash
 cd XmlEncodedProjectName.AppHost
@@ -58,9 +54,7 @@ dotnet user-secrets set "ConnectionStrings:openai" "Endpoint=https://your-resour
 Make sure you're logged in: `az login`
 
 <!--#else -->
-### 1. Configure OpenAI
-
-Set the connection string in the **AppHost** project:
+**OpenAI** — Set the connection string in the **AppHost** project:
 
 ```bash
 cd XmlEncodedProjectName.AppHost
