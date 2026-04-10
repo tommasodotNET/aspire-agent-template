@@ -6,8 +6,8 @@
 
 | Template | Short name | What you get |
 |----------|-----------|--------------|
-| **Aspire AI Agent** | `aspire-agent` | Minimal starting point — AppHost, Agent service with DevUI, ServiceDefaults |
-| **Aspire AI Agent Starter App** | `aspire-agent-starter` | Full app — adds Blazor chat UI, sample domain tools, optional MCP server and multi-agent handoff |
+| **[Aspire AI Agent](content/aspire-agent)** | `aspire-agent` | Minimal starting point — AppHost, Agent service with DevUI, ServiceDefaults |
+| **[Aspire AI Agent Starter App](content/aspire-agent-starter)** | `aspire-agent-starter` | Full app — adds Blazor chat UI, sample domain tools, optional MCP server and multi-agent handoff |
 
 ### aspire-agent (minimal)
 
