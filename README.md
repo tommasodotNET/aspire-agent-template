@@ -151,6 +151,7 @@ var foundry = builder.AddFoundry("foundry")
 
 See these projects built from the templates:
 
+- **[ELI5Agent](https://github.com/leslierichardson95/ELI5Agent)** — Explain Like I'm 5 agent using prompt engineering (`aspire-agent --provider Foundry`)
 - **[InterviewCoach](https://github.com/leslierichardson95/InterviewCoach)** — Multi-agent mock interview app (`aspire-agent-starter --IncludeMcp --IncludeHandoff --provider Foundry`)
 
 ## Learn More
