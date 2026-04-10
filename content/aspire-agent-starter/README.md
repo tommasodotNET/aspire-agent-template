@@ -107,25 +107,23 @@ XmlEncodedProjectName.Web --AG-UI (SSE)--> XmlEncodedProjectName.Agent
 <!--#if (UseFoundry) -->
 ### 1. Configure Azure AI Foundry
 
-Set the connection string in the **AppHost** project:
+The model deployment is declared in the AppHost's `Program.cs` — Aspire auto-provisions the Azure AI Foundry resource on first run.
 
-```bash
-cd XmlEncodedProjectName.AppHost
-dotnet user-secrets set "ConnectionStrings:openai" "Endpoint=https://your-foundry-endpoint.openai.azure.com/"
-```
-
-You need an Azure AI Foundry project with a deployed model. The app uses `DefaultAzureCredential` -- make sure you are logged in:
+Make sure you're logged in:
 
 ```bash
 az login
 ```
 
-Optionally set the model deployment name (defaults to `gpt-4o-mini`):
+On **first run**, Aspire will prompt for your Azure subscription, location, and resource group, then provision the Foundry resource and model deployment. This takes 3-10 minutes. Subsequent runs start instantly (provisioning state is cached).
 
-```bash
-cd XmlEncodedProjectName.Agent
-dotnet user-secrets set "OpenAI:Deployment" "gpt-4o-mini"
+To change the model, edit the `AddDeployment` call in the AppHost's `Program.cs`:
+
+```csharp
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← change this
 ```
+
+Aspire detects the change automatically and re-provisions on next run (~30-60s).
 <!--#elif (UseFoundryLocal) -->
 ### 1. Install Foundry Local
 
@@ -298,17 +296,33 @@ The handoff workflow is powered by `AgentWorkflowBuilder` from `Microsoft.Agents
 
 ### Swap the AI provider
 
-The LLM is configured as an Aspire connection string in the AppHost. The Agent resolves `OpenAI.OpenAIClient` from DI -- no direct Azure SDK imports needed.
+The LLM is configured in the AppHost's `Program.cs`. The Agent resolves `OpenAI.OpenAIClient` from DI — no direct Azure SDK imports needed.
 
-To use a different provider, change the connection string or modify the AppHost:
+**Change the model** (Foundry provider):
 
 ```csharp
-// Azure OpenAI / Foundry -- via connection string
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← change this
+```
+
+Aspire detects the change and re-provisions automatically (~30-60s on next run).
+
+**Switch to a different provider** — change the AppHost configuration:
+
+```csharp
+// Azure OpenAI — via connection string
 var openai = builder.AddConnectionString("openai");
 
 // Azure OpenAI with provisioning (azd deploy)
 var openai = builder.AddAzureOpenAI("openai")
     .AddDeployment("chat", "gpt-4o", "2024-05-13");
+```
+
+**Use a pre-existing Azure resource** — skip auto-provisioning:
+
+```csharp
+var foundry = builder.AddFoundry("foundry")
+    .RunAsExisting("my-foundry-resource-name", "my-resource-group");
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);
 ```
 
 ### Add a real domain service
