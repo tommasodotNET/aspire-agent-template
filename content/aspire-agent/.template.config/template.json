@@ -6,7 +6,7 @@
   "name": "Aspire AI Agent App",
   "defaultName": "AspireAgentApp",
   "shortName": "aspire-agent",
-  "description": "An empty .NET Aspire solution with an AI agent service (Microsoft Agent Framework) and DevUI for testing. Add tools, web UI, and MCP with aspire-agent-starter.",
+  "description": "An empty Aspire solution with an AI agent service (Microsoft Agent Framework) and DevUI for testing. Add tools, web UI, and MCP with aspire-agent-starter.",
   "sourceName": "MyAgentApp",
   "preferNameDirectory": false,
   "tags": {
@@ -71,7 +71,7 @@
       "choices": [
         {
           "choice": "Foundry",
-          "description": "Azure AI Foundry — typed model deployment, auto-provisioning with azd"
+          "description": "Microsoft Foundry — typed model deployment, auto-provisioning with azd"
         },
         {
           "choice": "FoundryLocal",

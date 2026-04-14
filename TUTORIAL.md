@@ -1,4 +1,4 @@
-# Building AI Agents with .NET Aspire — Progressive Tutorial
+# Building AI Agents with Aspire — Progressive Tutorial
 
 This tutorial walks you from a minimal AI agent to a full-featured application with tools, web UI, MCP, multi-agent handoff, and deployment.
 
@@ -17,7 +17,7 @@ dotnet new aspire-agent -n MyAgentApp --provider FoundryLocal
 cd MyAgentApp
 ```
 
-> **Provider options:** `Foundry` (Azure AI Foundry), `FoundryLocal` (local LLM, no Azure needed), `AzureOpenAI`, `OpenAI`
+> **Provider options:** `Foundry` (Microsoft Foundry), `FoundryLocal` (local LLM, no Azure needed), `AzureOpenAI`, `OpenAI`
 
 ### What you get
 
@@ -34,8 +34,7 @@ Three projects. The AppHost starts everything; the Agent talks to the LLM.
 ### Run it
 
 ```bash
-cd MyAgentApp.AppHost
-dotnet run
+aspire start
 ```
 
 Open the Aspire dashboard URL from the console. Click the agent's endpoint to open **DevUI** — a built-in chat interface for testing your agent.
@@ -421,7 +420,7 @@ azd up
 | Agent | Azure Container App |
 | Web | Azure Container App (with external ingress) |
 | MCP | Azure Container App |
-| Foundry | Azure AI Foundry account + deployment |
+| Foundry | Microsoft Foundry account + deployment |
 
 ### Production considerations
 
@@ -464,7 +463,7 @@ dotnet new aspire-agent -n MyApp --provider FoundryLocal
 
 ## Learn More
 
-- [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
+- [Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents)
 - [AG-UI Protocol](https://learn.microsoft.com/agent-framework/ag-ui/)
 - [DevUI](https://learn.microsoft.com/agent-framework/devui/)

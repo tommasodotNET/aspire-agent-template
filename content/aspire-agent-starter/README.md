@@ -1,6 +1,6 @@
 # Aspire AI Agent Starter App
 
-A full-featured AI agent application built with [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents). Includes a Blazor chat UI with AG-UI streaming, sample domain tools, and optional MCP server and multi-agent handoff — everything you need to start building a real agent app.
+A full-featured AI agent application built with [Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents). Includes a Blazor chat UI with AG-UI streaming, sample domain tools, and optional MCP server and multi-agent handoff — everything you need to start building a real agent app.
 
 ## Architecture
 
@@ -50,7 +50,7 @@ graph TD
 ### 1. Configure Your AI Provider
 
 <!--#if (UseFoundry) -->
-**Azure AI Foundry** — The model deployment is declared in the AppHost's `Program.cs` — Aspire auto-provisions the Azure AI Foundry resource on first run.
+**Microsoft Foundry** — The model deployment is declared in the AppHost's `AppHost.cs` — Aspire auto-provisions the Microsoft Foundry resource on first run.
 
 Make sure you're logged in:
 
@@ -60,10 +60,10 @@ az login
 
 On **first run**, Aspire will prompt for your Azure subscription, location, and resource group, then provision the Foundry resource and model deployment. This takes 3-10 minutes. Subsequent runs start instantly (provisioning state is cached).
 
-To change the model, edit the `AddDeployment` call in the AppHost's `Program.cs`:
+To change the model, edit the `AddDeployment` call in the AppHost's `AppHost.cs`:
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← change this
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change automatically and re-provisions on next run (~30-60s).
@@ -118,8 +118,7 @@ dotnet user-secrets set "OpenAI:Deployment" "gpt-4o-mini"
 ### 2. Run the App
 
 ```bash
-cd XmlEncodedProjectName.AppHost
-dotnet run
+aspire start
 ```
 
 This starts the Aspire dashboard, the Agent service, and the Web UI. Open the dashboard URL shown in the console to see all services.
@@ -233,12 +232,12 @@ The handoff workflow is powered by `AgentWorkflowBuilder` from `Microsoft.Agents
 
 ### Swap the AI provider
 
-The LLM is configured in the AppHost's `Program.cs`. The Agent resolves `OpenAI.OpenAIClient` from DI — no direct Azure SDK imports needed.
+The LLM is configured in the AppHost's `AppHost.cs`. The Agent resolves `OpenAI.OpenAIClient` from DI — no direct Azure SDK imports needed.
 
 **Change the model** (Foundry provider):
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← change this
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change and re-provisions automatically (~30-60s on next run).
@@ -259,7 +258,7 @@ var openai = builder.AddAzureOpenAI("openai")
 ```csharp
 var foundry = builder.AddFoundry("foundry")
     .RunAsExisting("my-foundry-resource-name", "my-resource-group");
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
 ```
 
 ### Add a real domain service
@@ -272,7 +271,7 @@ Replace `TodoService` with your own domain (e.g., database-backed Orders, Custom
 
 ## Learn More
 
-- [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
+- [Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents)
 - [AG-UI Protocol](https://learn.microsoft.com/agent-framework/ag-ui/)
 - [DevUI](https://learn.microsoft.com/agent-framework/devui/)

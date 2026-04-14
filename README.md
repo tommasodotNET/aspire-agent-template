@@ -1,10 +1,10 @@
 # aspire-agent-template
 
-`dotnet new` templates for building AI agent applications with [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents).
+`dotnet new` templates for building AI agent applications with [Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents).
 
 ## Why Aspire for AI Agents?
 
-.NET Aspire turns a multi-service agent system into a single `dotnet run` experience:
+Aspire turns a multi-service agent system into a single `aspire start` experience:
 
 - **One-command startup** — The AppHost launches the agent, connects the LLM, and wires up service discovery automatically
 - **Service discovery** — The agent finds the LLM, MCP servers, and other services via injected connection strings — no hardcoded URLs *(starter)*
@@ -82,7 +82,6 @@ This installs both `aspire-agent` and `aspire-agent-starter`.
 
 ```bash
 dotnet new aspire-agent-starter -n MyAgent
-cd MyAgent
 ```
 
 ### 3. Choose an AI provider
@@ -91,7 +90,7 @@ Both templates support four providers via the `--provider` flag:
 
 | Provider | Flag | Setup |
 |----------|------|-------|
-| **Azure AI Foundry** (default) | `--provider Foundry` | `az login` — Aspire auto-provisions on first run |
+| **Microsoft Foundry** (default) | `--provider Foundry` | `az login` — Aspire auto-provisions on first run |
 | **Foundry Local** | `--provider FoundryLocal` | Install [Foundry Local](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started) — no Azure needed |
 | **Azure OpenAI** | `--provider AzureOpenAI` | Set connection string + `az login` |
 | **OpenAI** | `--provider OpenAI` | Set connection string with API key |
@@ -105,20 +104,19 @@ dotnet new aspire-agent-starter -n MyAgent --provider FoundryLocal
 ### 4. Run
 
 ```bash
-cd MyAgent.AppHost
-dotnet run
+aspire start
 ```
 
 The Aspire dashboard opens automatically. For `aspire-agent`, open the Agent endpoint to access DevUI. For `aspire-agent-starter`, click the Web UI link to start chatting.
 
-> **First run with Foundry provider:** Aspire prompts for your Azure subscription, location, and resource group, then provisions the Foundry resource (3-10 minutes). Subsequent runs start instantly.
+> **First run with Foundry provider:** Aspire prompts for your Azure subscription, location, and resource group, then provisions the Microsoft Foundry resource (3-10 minutes). Subsequent runs start instantly.
 
 ## Changing Models
 
-The model is declared in the AppHost's `Program.cs`. To switch models:
+The model is declared in the AppHost's `AppHost.cs`. To switch models:
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt5Mini);  // ← change this
+var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change and re-provisions automatically (~30-60s on next run).
@@ -156,7 +154,7 @@ See these projects built from the templates:
 
 ## Learn More
 
-- [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
+- [Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents)
 - [AG-UI Protocol](https://learn.microsoft.com/agent-framework/ag-ui/)
 - [DevUI](https://learn.microsoft.com/agent-framework/devui/)

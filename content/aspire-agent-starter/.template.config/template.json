@@ -6,7 +6,7 @@
   "name": "Aspire AI Agent Starter App",
   "defaultName": "AspireAgentApp",
   "shortName": "aspire-agent-starter",
-  "description": "A .NET Aspire solution with an AI agent, sample domain tools, Blazor chat UI, and optional MCP server. Use aspire-agent for a minimal starting point.",
+  "description": "An Aspire solution with an AI agent, sample domain tools, Blazor chat UI, and optional MCP server. Use aspire-agent for a minimal starting point.",
   "sourceName": "MyAgentApp",
   "preferNameDirectory": false,
   "tags": {
@@ -101,7 +101,7 @@
       "choices": [
         {
           "choice": "Foundry",
-          "description": "Azure AI Foundry — typed model deployment, auto-provisioning with azd"
+          "description": "Microsoft Foundry — typed model deployment, auto-provisioning with azd"
         },
         {
           "choice": "FoundryLocal",

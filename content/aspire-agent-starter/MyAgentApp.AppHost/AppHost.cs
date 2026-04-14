@@ -6,7 +6,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // ── LLM Configuration ───────────────────────────────────────────────────────
 #if (UseFoundry)
-// Azure AI Foundry — model deployment declared in code, auto-provisioned with 'azd up'.
+// Microsoft Foundry — model deployment declared in code, auto-provisioned with 'azd up'.
 // No manual user-secrets needed for run mode; Aspire injects connection info automatically.
 var foundry = builder.AddFoundry("foundry");
 var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);

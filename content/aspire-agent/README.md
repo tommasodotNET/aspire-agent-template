@@ -1,6 +1,6 @@
 # Aspire AI Agent
 
-A minimal AI agent service built with [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents). This template provides the foundation — an Aspire-orchestrated agent with DevUI for testing — so you can focus on adding your own tools and domain logic.
+A minimal AI agent service built with [Aspire](https://learn.microsoft.com/dotnet/aspire/) and the [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents). This template provides the foundation — an Aspire-orchestrated agent with DevUI for testing — so you can focus on adding your own tools and domain logic.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ graph TD
 ### 1. Configure Your AI Provider
 
 <!--#if (UseFoundry) -->
-**Azure AI Foundry** — The model deployment is declared in the AppHost — Aspire provisions it automatically on first run.
+**Microsoft Foundry** — The model deployment is declared in the AppHost — Aspire provisions it automatically on first run.
 
 Make sure you're logged in:
 
@@ -68,8 +68,7 @@ For **GitHub Models**: `"Endpoint=https://models.inference.ai.azure.com;Key=ghp_
 ### 2. Run
 
 ```bash
-cd XmlEncodedProjectName.AppHost
-dotnet run
+aspire start
 ```
 
 Open the Aspire dashboard URL shown in the console. Click the agent's endpoint to open DevUI.
@@ -91,7 +90,7 @@ Or see the full template: `dotnet new aspire-agent-starter`
 
 ## Learn More
 
-- [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
+- [Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/dotnet/ai/agents)
 - [DevUI](https://learn.microsoft.com/agent-framework/devui/)
 - [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/ai-extensions)
