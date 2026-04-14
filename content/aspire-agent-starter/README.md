@@ -248,7 +248,7 @@ Aspire detects the change and re-provisions automatically (~30-60s on next run).
 // Azure OpenAI — via connection string
 var openai = builder.AddConnectionString("openai");
 
-// Azure OpenAI with provisioning (azd deploy)
+// Azure OpenAI with provisioning (Aspire auto-provisions)
 var openai = builder.AddAzureOpenAI("openai")
     .AddDeployment("chat", "gpt-4o", "2024-05-13");
 ```

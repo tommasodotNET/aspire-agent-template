@@ -71,7 +71,7 @@
       "choices": [
         {
           "choice": "Foundry",
-          "description": "Microsoft Foundry — typed model deployment, auto-provisioning with azd"
+          "description": "Microsoft Foundry — typed model deployment, auto-provisioned by Aspire"
         },
         {
           "choice": "FoundryLocal",
