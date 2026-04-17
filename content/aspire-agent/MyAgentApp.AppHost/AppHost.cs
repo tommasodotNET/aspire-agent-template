@@ -10,7 +10,8 @@ builder.AddAzureContainerAppEnvironment("aspire-env");
 #if (UseFoundry)
 // Microsoft Foundry — model deployment declared in code, auto-provisioned by Aspire.
 var foundry = builder.AddFoundry("foundry");
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
+var project = foundry.AddProject("project");
+var chat = project.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
 #elif (UseFoundryLocal)
 // Foundry Local — runs a local LLM, no Azure account needed.
 var foundry = builder.AddFoundry("foundry")
