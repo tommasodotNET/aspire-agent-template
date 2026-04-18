@@ -1,6 +1,8 @@
+using A2A;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
+using Microsoft.Agents.AI.Hosting.A2A;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -261,6 +263,37 @@ var agent = app.Services.GetKeyedService<AIAgent>("MyAgent");
 if (agent is not null)
 {
     app.MapAGUI("/api/agui", agent);
+
+    // ── A2A Protocol ─────────────────────────────────────────────────────────
+#if (IncludeHandoff)
+    app.MapA2A(agent, "/api/a2a", new AgentCard
+    {
+        Name = "MyAgent",
+        Description = "A multi-agent workflow that routes requests to specialist agents for task management.",
+        Version = "1.0",
+        DefaultInputModes = ["text"],
+        DefaultOutputModes = ["text"],
+        Capabilities = new AgentCapabilities
+        {
+            Streaming = true,
+            PushNotifications = false
+        }
+    });
+#else
+    app.MapA2A(agent, "/api/a2a", new AgentCard
+    {
+        Name = "MyAgent",
+        Description = "A helpful AI assistant that manages a todo list using available tools.",
+        Version = "1.0",
+        DefaultInputModes = ["text"],
+        DefaultOutputModes = ["text"],
+        Capabilities = new AgentCapabilities
+        {
+            Streaming = true,
+            PushNotifications = false
+        }
+    });
+#endif
 }
 
 app.MapOpenAIResponses();
