@@ -12,13 +12,13 @@ builder.AddAzureContainerAppEnvironment("aspire-env");
 // No manual user-secrets needed for run mode; Aspire injects connection info automatically.
 var foundry = builder.AddFoundry("foundry");
 var project = foundry.AddProject("project");
-var chat = project.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
+var chat = project.AddModelDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
 #elif (UseFoundryLocal)
 // Foundry Local — runs a local LLM, no Azure account needed.
 // Requires Foundry Local installed: https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started
 var foundry = builder.AddFoundry("foundry")
     .RunAsFoundryLocal();
-var chat = foundry.AddDeployment("chat", FoundryModel.Local.Phi4);
+var chat = foundry.AddModelDeployment("chat", FoundryModel.Local.Phi4);
 #elif (UseAzureOpenAI)
 // Azure OpenAI — Aspire prompts for the connection string in the dashboard if not configured.
 // Can also be set via user-secrets: ConnectionStrings:openai

@@ -1,6 +1,8 @@
+using A2A;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
+using Microsoft.Agents.AI.Hosting.A2A;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Extensions.AI;
 
@@ -29,6 +31,7 @@ builder.AddAzureChatCompletionsClient("chat")
         var chatClient = sp.GetRequiredService<IChatClient>();
         return chatClient.AsAIAgent(
             name: name,
+            description: "A helpful AI assistant that answers questions clearly and concisely.",
             instructions: """
                 You are a helpful AI assistant. Answer questions clearly and concisely.
                 """);
@@ -51,6 +54,7 @@ if (!string.IsNullOrEmpty(connectionString))
         var chatClient = openaiClient.GetChatClient(deployment).AsIChatClient();
         return chatClient.AsAIAgent(
             name: name,
+            description: "A helpful AI assistant that answers questions clearly and concisely.",
             instructions: """
                 You are a helpful AI assistant. Answer questions clearly and concisely.
                 """);
@@ -73,6 +77,21 @@ var agent = app.Services.GetKeyedService<AIAgent>("MyAgent");
 if (agent is not null)
 {
     app.MapAGUI("/api/agui", agent);
+
+    // ── A2A Protocol ─────────────────────────────────────────────────────────
+    app.MapA2A(agent, "/api/a2a", new AgentCard
+    {
+        Name = agent.Name,
+        Description = agent.Description,
+        Version = "1.0",
+        DefaultInputModes = ["text"],
+        DefaultOutputModes = ["text"],
+        Capabilities = new AgentCapabilities
+        {
+            Streaming = true,
+            PushNotifications = false
+        }
+    });
 }
 
 app.MapOpenAIResponses();

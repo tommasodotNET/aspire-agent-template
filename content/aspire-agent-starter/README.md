@@ -60,10 +60,10 @@ az login
 
 On **first run**, Aspire will prompt for your Azure subscription, location, and resource group, then provision the Foundry resource and model deployment. This takes 3-10 minutes. Subsequent runs start instantly (provisioning state is cached).
 
-To change the model, edit the `AddDeployment` call in the AppHost's `AppHost.cs`:
+To change the model, edit the `AddModelDeployment` call in the AppHost's `AppHost.cs`:
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
+var chat = foundry.AddModelDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change automatically and re-provisions on next run (~30-60s).
@@ -237,7 +237,7 @@ The LLM is configured in the AppHost's `AppHost.cs`. The Agent resolves `OpenAI.
 **Change the model** (Foundry provider):
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
+var chat = foundry.AddModelDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change and re-provisions automatically (~30-60s on next run).
@@ -250,7 +250,7 @@ var openai = builder.AddConnectionString("openai");
 
 // Azure OpenAI with provisioning (Aspire auto-provisions)
 var openai = builder.AddAzureOpenAI("openai")
-    .AddDeployment("chat", "gpt-4o", "2024-05-13");
+    .AddModelDeployment("chat", "gpt-4o", "2024-05-13");
 ```
 
 **Use a pre-existing Azure resource** — skip auto-provisioning:
@@ -258,7 +258,7 @@ var openai = builder.AddAzureOpenAI("openai")
 ```csharp
 var foundry = builder.AddFoundry("foundry")
     .RunAsExisting("my-foundry-resource-name", "my-resource-group");
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
+var chat = foundry.AddModelDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);
 ```
 
 ### Add a real domain service

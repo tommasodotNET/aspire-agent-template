@@ -1,6 +1,8 @@
+using A2A;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
+using Microsoft.Agents.AI.Hosting.A2A;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -61,6 +63,7 @@ builder.AddAzureChatCompletionsClient("chat")
         // └─────────────────────────────────────────────────────────────────┘
         return chatClient.AsAIAgent(
             name: name,
+            description: "A helpful AI assistant that manages a todo list using available tools.",
             instructions: """
                 You are a helpful AI assistant that manages a todo list.
                 Use the available tools to add, list, complete, and delete todo items.
@@ -134,7 +137,9 @@ builder.AddAzureChatCompletionsClient("chat")
     });
 
     builder.AddAIAgent("MyAgent", (sp, key) =>
-        sp.GetRequiredKeyedService<Workflow>("MyAgent").AsAIAgent(name: key));
+        sp.GetRequiredKeyedService<Workflow>("MyAgent").AsAIAgent(
+            name: key,
+            description: "A multi-agent workflow that routes requests to specialist agents for task management."));
 #endif
 }
 #else
@@ -167,6 +172,7 @@ if (!string.IsNullOrEmpty(connectionString))
         // └─────────────────────────────────────────────────────────────────┘
         return chatClient.AsAIAgent(
             name: name,
+            description: "A helpful AI assistant that manages a todo list using available tools.",
             instructions: """
                 You are a helpful AI assistant that manages a todo list.
                 Use the available tools to add, list, complete, and delete todo items.
@@ -231,7 +237,9 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 
     builder.AddAIAgent("MyAgent", (sp, key) =>
-        sp.GetRequiredKeyedService<Workflow>("MyAgent").AsAIAgent(name: key));
+        sp.GetRequiredKeyedService<Workflow>("MyAgent").AsAIAgent(
+            name: key,
+            description: "A multi-agent workflow that routes requests to specialist agents for task management."));
 #endif
 }
 #endif
@@ -261,6 +269,21 @@ var agent = app.Services.GetKeyedService<AIAgent>("MyAgent");
 if (agent is not null)
 {
     app.MapAGUI("/api/agui", agent);
+
+    // ── A2A Protocol ─────────────────────────────────────────────────────────
+    app.MapA2A(agent, "/api/a2a", new AgentCard
+    {
+        Name = agent.Name,
+        Description = agent.Description,
+        Version = "1.0",
+        DefaultInputModes = ["text"],
+        DefaultOutputModes = ["text"],
+        Capabilities = new AgentCapabilities
+        {
+            Streaming = true,
+            PushNotifications = false
+        }
+    });
 }
 
 app.MapOpenAIResponses();

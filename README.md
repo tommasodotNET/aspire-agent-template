@@ -116,7 +116,7 @@ The Aspire dashboard opens automatically. For `aspire-agent`, open the Agent end
 The model is declared in the AppHost's `AppHost.cs`. To switch models:
 
 ```csharp
-var chat = foundry.AddDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
+var chat = foundry.AddModelDeployment("chat", FoundryModel.OpenAI.Gpt4oMini);  // ← change this
 ```
 
 Aspire detects the change and re-provisions automatically (~30-60s on next run).
